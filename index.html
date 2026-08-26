@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>
+<title>Mandala 2027</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Spline+Sans+Mono:wght@400;500&display=swap">
+<style id="app-css">
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9fb; --surface:#ffffff; --surface2:#f3f0f7; --ink:#26212e; --ink2:#6d6579;
+  --line:#e6e1ec; --shadow:0 10px 30px rgba(38,33,46,.14);
+  --work:#7857c8; --work-soft:#efe9fb; --work-ink:#4d3390;
+  --life:#178f84; --life-soft:#e0f2ef; --life-ink:#0d6b62;
+  --coral:#e8654f; --coral-soft:#fdeae4; --coral-ink:#b03e2c;
+  --hit:#2e9e63; --hit-soft:#e2f3ea; --miss:#d84f45; --miss-soft:#fbe8e6; --skip:#a39aad;
+  --overlay:rgba(24,19,30,.45);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151218; --surface:#1f1a26; --surface2:#282130; --ink:#efeaf5; --ink2:#a396b3;
+    --line:#352c40; --shadow:0 10px 30px rgba(0,0,0,.5);
+    --work:#a48aee; --work-soft:#2a2140; --work-ink:#cabaf8;
+    --life:#3ec2b3; --life-soft:#123330; --life-ink:#82ded1;
+    --coral:#f5836c; --coral-soft:#3c231d; --coral-ink:#ffb3a1;
+    --hit:#46c07f; --hit-soft:#173626; --miss:#f07067; --miss-soft:#3d1f1c; --skip:#7d7389;
+    --overlay:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151218; --surface:#1f1a26; --surface2:#282130; --ink:#efeaf5; --ink2:#a396b3;
+  --line:#352c40; --shadow:0 10px 30px rgba(0,0,0,.5);
+  --work:#a48aee; --work-soft:#2a2140; --work-ink:#cabaf8;
+  --life:#3ec2b3; --life-soft:#123330; --life-ink:#82ded1;
+  --coral:#f5836c; --coral-soft:#3c231d; --coral-ink:#ffb3a1;
+  --hit:#46c07f; --hit-soft:#173626; --miss:#f07067; --miss-soft:#3d1f1c; --skip:#7d7389;
+  --overlay:rgba(0,0,0,.6);
+}
+html,body{background:var(--bg);color:var(--ink);
+  font-family:"Zen Kaku Gothic New",-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--work);outline-offset:2px}
+input,textarea{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid var(--line);
+  border-radius:8px;padding:8px 10px;width:100%}
+.wrap{max-width:680px;margin:0 auto;padding:14px 12px 90px}
+h1,h2,h3,.num{font-family:Sora,"Zen Kaku Gothic New",sans-serif}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.top h1{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.savedot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2)}
+.savedot i{width:8px;height:8px;border-radius:50%;background:var(--skip);display:inline-block}
+.savedot.ok i{background:var(--hit)} .savedot.saving i{background:var(--coral)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
+  font-size:13px;font-weight:500;color:var(--ink2)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg button.add{border-style:dashed}
+
+/* center card */
+.center-card{background:var(--coral-soft);border:1px solid var(--coral);border-radius:14px;
+  padding:14px 16px;margin-bottom:14px;cursor:pointer}
+.center-card .eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--coral-ink);margin-bottom:4px}
+.center-card p{font-family:Sora,sans-serif;font-weight:600;font-size:15px;line-height:1.4;
+  color:var(--ink);text-wrap:balance}
+.center-card .meta{margin-top:6px;font-size:11px;color:var(--coral-ink)}
+
+/* 9x9 board */
+.board-scroll{overflow-x:auto;margin:0 -12px;padding:0 12px 6px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;min-width:560px}
+.block{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.cell{position:relative;aspect-ratio:1;border-radius:5px;padding:4px 4px 3px;font-size:8.5px;
+  line-height:1.25;overflow:hidden;text-align:left;display:block;width:100%}
+.cell span{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.cell.work{background:var(--work-soft);color:var(--work-ink)}
+.cell.life{background:var(--life-soft);color:var(--life-ink)}
+.cell.pname{font-family:Sora,sans-serif;font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;text-align:center}
+.cell.pname.work{background:var(--work);color:#fff}
+.cell.pname.life{background:var(--life);color:#fff}
+.cell.core{background:var(--coral);color:#fff;font-family:Sora,sans-serif;font-weight:600;
+  font-size:8px;display:flex;align-items:center;text-align:center}
+.cell.down{opacity:.42}.cell.down span{text-decoration:line-through}
+.dot{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%}
+.dot.hit{background:var(--hit)}.dot.miss{background:var(--miss)}.dot.skip{background:var(--skip)}
+.dot.open{border:1.5px solid currentColor;opacity:.5}
+.hintline{font-size:11px;color:var(--ink2);margin:8px 2px 0}
+
+/* pillar list view */
+.backrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.backrow button{font-size:13px;color:var(--ink2);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.ptitle{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+.ptitle h2{font-size:20px}
+.half-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.half-tag.work{background:var(--work-soft);color:var(--work-ink)}
+.half-tag.life{background:var(--life-soft);color:var(--life-ink)}
+.crow{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:11px 12px;margin-bottom:8px;display:block}
+.crow.down{opacity:.5}
+.crow .t{font-size:14px;font-weight:500;line-height:1.4}
+.crow.down .t{text-decoration:line-through}
+.crow .sub{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--ink2)}
+.chip.cad{background:var(--work-soft);color:var(--work-ink)}
+.life-p .chip.cad{background:var(--life-soft);color:var(--life-ink)}
+.chip.dl{background:var(--coral-soft);color:var(--coral-ink)}
+.streak{font-size:11px;color:var(--ink2)}
+.streak b{color:var(--ink);font-weight:700}
+.strip{display:flex;gap:2px;margin-left:auto}
+.strip i{width:5px;height:10px;border-radius:2px;background:var(--surface2);border:1px solid var(--line)}
+.strip i.hit{background:var(--hit);border-color:var(--hit)}
+.strip i.miss{background:var(--miss);border-color:var(--miss)}
+.strip i.skip{background:var(--skip);border-color:var(--skip)}
+
+/* bottom sheet */
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:40}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
+  border-radius:18px 18px 0 0;box-shadow:var(--shadow);max-height:86vh;overflow-y:auto;
+  padding:10px 16px 26px;max-width:680px;margin:0 auto}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet .celltext{font-family:Sora,sans-serif;font-weight:600;font-size:16px;line-height:1.4;margin-bottom:8px;text-wrap:balance}
+.sheet .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.bigbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.bigbtns button{padding:13px 6px;border-radius:12px;font-family:Sora,sans-serif;font-weight:700;font-size:14px;border:1px solid var(--line)}
+.b-hit{background:var(--hit-soft);color:var(--hit)}
+.b-miss{background:var(--miss-soft);color:var(--miss)}
+.b-skip{background:var(--surface2);color:var(--ink2)}
+.notein{margin-bottom:10px}
+.minilog{border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+.minilog h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-bottom:6px}
+.minilog .le{display:flex;gap:8px;font-size:12px;padding:3px 0;color:var(--ink2)}
+.minilog .le b{min-width:78px;font-weight:500;color:var(--ink)}
+.le .st-hit{color:var(--hit);font-weight:700}.le .st-miss{color:var(--miss);font-weight:700}.le .st-skip{color:var(--skip);font-weight:700}
+.linkrow{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.linkrow button{font-size:13px;color:var(--work-ink);text-decoration:underline;text-underline-offset:3px}
+.hist{font-size:12px;color:var(--ink2);margin-top:8px;border-left:2px solid var(--line);padding-left:10px}
+.hist .he{margin-bottom:6px}
+
+/* review mode */
+.review{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
+.review .inner{max-width:560px;margin:0 auto;padding:20px 16px 60px;min-height:100%;display:flex;flex-direction:column}
+.rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.rev-top .prog{font-size:12px;color:var(--ink2)}
+.rev-bar{height:4px;border-radius:2px;background:var(--surface2);margin-bottom:26px;overflow:hidden}
+.rev-bar i{display:block;height:100%;background:var(--coral);border-radius:2px}
+.rev-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 18px;box-shadow:var(--shadow)}
+.rev-card .pl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.rev-card .pl.work{color:var(--work-ink)}.rev-card .pl.life{color:var(--life-ink)}
+.rev-card .ct{font-family:Sora,sans-serif;font-weight:600;font-size:19px;line-height:1.45;text-wrap:balance;margin-bottom:12px}
+.rev-note{font-size:12px;color:var(--ink2);margin-top:8px}
+.rev-done h2{font-size:22px;margin-bottom:10px}
+.tally{display:flex;gap:10px;margin:14px 0}
+.tally div{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.tally .num{font-size:22px;font-weight:700}
+.tally .lb{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.primary{display:block;width:100%;padding:14px;border-radius:12px;background:var(--ink);color:var(--bg);
+  font-family:Sora,sans-serif;font-weight:700;font-size:15px;text-align:center}
+.ghost{display:block;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);
+  color:var(--ink2);font-size:14px;text-align:center;margin-top:8px;background:var(--surface)}
+.review-cta{margin-top:16px}
+.lastrev{font-size:12px;color:var(--ink2);margin-top:8px;text-align:center}
+.modal-title{font-family:Sora,sans-serif;font-weight:700;font-size:17px;margin-bottom:8px}
+.fieldlb{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);margin:10px 0 4px}
+.err{color:var(--miss);font-size:12px;margin-top:6px}
+textarea.import{min-height:130px;font-family:"Spline Sans Mono",monospace;font-size:11px}
+</style>
+<div id="root"></div>
+<script id="app-js">
+'use strict';
+/* ---------- config + local cache ---------- */
+var LSKEY = 'mandala-state-v1', CFGKEY = 'mandala-cfg-v1';
+var cfg = null, state = null, remoteSha = null, pushTimer = null;
+try { cfg = JSON.parse(localStorage.getItem(CFGKEY) || 'null'); } catch (e) {}
+try { state = JSON.parse(localStorage.getItem(LSKEY) || 'null'); } catch (e) {}
+if (state && !state.events) state = null;
+var syncStatus = cfg ? 'syncing' : 'setup';
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function todayStr(d){ d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function saveLocal(){ try { localStorage.setItem(LSKEY, JSON.stringify(state)); } catch (e) {} }
+function persist(){
+  state.rev = (state.rev || 0) + 1;
+  saveLocal();
+  schedulePush();
+}
+function schedulePush(){
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(function(){ push(0); }, 1200);
+}
+
+/* ---------- GitHub sync (private data repo) ---------- */
+function apiUrl(){ return 'https://api.github.com/repos/' + cfg.repo + '/contents/' + (cfg.path || 'state.json'); }
+function ghHeaders(){ return { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' }; }
+function b64e(s){ var u = new TextEncoder().encode(s), b = ''; for (var i = 0; i < u.length; i++) b += String.fromCharCode(u[i]); return btoa(b); }
+function b64d(b){ var s = atob(String(b).replace(/\s/g, '')), u = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new TextDecoder().decode(u); }
+
+function mergeInto(target, src){
+  var ids = {};
+  target.events.forEach(function(e){ ids[e.id] = 1; });
+  (src.events || []).forEach(function(e){ if (!ids[e.id]) target.events.push(e); });
+  (src.boards || []).forEach(function(b){
+    if (!target.boards.some(function(x){ return x.id === b.id; })) target.boards.push(b);
+  });
+  target.rev = Math.max(target.rev || 0, src.rev || 0);
+}
+function localAhead(remote){
+  var ids = {};
+  (remote.events || []).forEach(function(e){ ids[e.id] = 1; });
+  return state.events.some(function(e){ return !ids[e.id]; }) ||
+    state.boards.some(function(b){
+      return !(remote.boards || []).some(function(x){ return x.id === b.id; });
+    });
+}
+function setSync(s){ syncStatus = s; renderStatus(); }
+
+function pull(){
+  if (!cfg) return;
+  setSync('syncing');
+  fetch(apiUrl() + '?_=' + Date.now(), { headers: ghHeaders() }).then(function(r){
+    if (r.status === 401 || r.status === 403) { setSync('badtoken'); return null; }
+    if (r.status === 404) { setSync('notfound'); return null; }
+    if (!r.ok) { setSync('offline'); return null; }
+    return r.json();
+  }).then(function(j){
+    if (!j) return;
+    remoteSha = j.sha;
+    var remote = JSON.parse(b64d(j.content));
+    if (!state) { state = remote; }
+    else {
+      var ahead = localAhead(remote);
+      mergeInto(state, remote);
+      if (ahead) schedulePush();
+    }
+    saveLocal();
+    syncStatus = 'synced';
+    render();
+  }).catch(function(){ setSync('offline'); });
+}
+
+function push(attempt){
+  if (!cfg || !state) return;
+  setSync('syncing');
+  fetch(apiUrl() + '?_=' + Date.now(), { headers: ghHeaders() }).then(function(r){
+    if (r.ok) return r.json();
+    if (r.status === 404) return null; /* first ever write */
+    throw new Error('prefetch ' + r.status);
+  }).then(function(j){
+    if (j) { remoteSha = j.sha; mergeInto(state, JSON.parse(b64d(j.content))); saveLocal(); }
+    var body = { message: 'mandala: log update', content: b64e(JSON.stringify(state)) };
+    if (remoteSha) body.sha = remoteSha;
+    return fetch(apiUrl(), { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  }).then(function(p){
+    if (p.ok) return p.json().then(function(pj){ remoteSha = pj.content.sha; setSync('synced'); });
+    if ((p.status === 409 || p.status === 422) && attempt < 3) { remoteSha = null; return push(attempt + 1); }
+    setSync(p.status === 401 || p.status === 403 ? 'badtoken' : 'offline');
+  }).catch(function(){ setSync('offline'); });
+}
+document.addEventListener('visibilitychange', function(){ if (!document.hidden && cfg) pull(); });
+setInterval(function(){ if (!document.hidden && cfg) pull(); }, 90000);
+
+/* ---------- derived data ---------- */
+var activeBoardId = null;
+try { activeBoardId = localStorage.getItem('mandala-active-board'); } catch (e) {}
+
+function activeBoard(){
+  if (!state.boards.some(function(b){ return b.id === activeBoardId; })) activeBoardId = state.boards[0].id;
+  return state.boards.filter(function(b){ return b.id === activeBoardId; })[0];
+}
+function cellEvents(pk, i, type){
+  return state.events.filter(function(e){
+    return e.boardId === activeBoardId && e.pk === pk && e.i === i && (!type || e.type === type);
+  }).sort(function(a, b){ return a.ts - b.ts; });
+}
+function cellText(pk, i){
+  var edits = cellEvents(pk, i, 'edit');
+  if (edits.length) return edits[edits.length - 1].newText;
+  return activeBoard().board.pillars.filter(function(p){ return p.key === pk; })[0].cells[i];
+}
+function isDown(pk, i){
+  var evs = cellEvents(pk, i).filter(function(e){ return e.type === 'downgrade' || e.type === 'restore'; });
+  return evs.length ? evs[evs.length - 1].type === 'downgrade' : false;
+}
+
+/* ---------- cadence ---------- */
+var UNITS = { week: 'week', wk: 'week', month: 'month', mo: 'month', quarter: 'quarter', yr: 'year', year: 'year' };
+function parseCadence(text){
+  var t = text.toLowerCase(); var m;
+  m = t.match(/by\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*(\d{1,2})?/);
+  if (m) return { type: 'deadline', label: 'by ' + m[1].charAt(0).toUpperCase() + m[1].slice(1) + (m[2] ? ' ' + m[2] : '') };
+  m = t.match(/by\s+(mid-|end\s+)?(\d{4})/);
+  if (m) return { type: 'deadline', label: 'by ' + (m[1] || '') + m[2] };
+  m = t.match(/(\d+)(?:\s*[–-]\s*\d+)?\s*[×x]\s*\/\s*(week|wk|month|mo|quarter|yr|year)/);
+  if (m) return { type: 'cadence', n: +m[1], per: UNITS[m[2]] };
+  m = t.match(/(\d+)(?:\s*[–-]\s*\d+)?\s*\/\s*(week|wk|month|mo|quarter|yr|year)\b/);
+  if (m) return { type: 'cadence', n: +m[1], per: UNITS[m[2]] };
+  m = t.match(/every\s+(\d+)\s+months?/);
+  if (m) return { type: 'cadence', n: 1, per: 'month', span: +m[1] };
+  m = t.match(/once\s+(?:a|per)\s+(week|month|quarter|year)/);
+  if (m) return { type: 'cadence', n: 1, per: m[1] };
+  m = t.match(/(\d+)(?:\s*[–-]\s*\d+)?\s*x?\s+(?:a|per)\s+(week|month|quarter|year)/);
+  if (m) return { type: 'cadence', n: +m[1], per: m[2] };
+  if (/\bbiweekly\b|every\s+2\s+weeks/.test(t)) return { type: 'cadence', n: 1, per: 'week', span: 2 };
+  if (/every\s+weekend|weekly|every\s+week|per\s+week|\ba week\b|\/\s*(wk|week)\b/.test(t)) return { type: 'cadence', n: 1, per: 'week' };
+  if (/\bmonthly\b|\ba month\b|per\s+month|\/\s*(mo|month)\b/.test(t)) return { type: 'cadence', n: 1, per: 'month' };
+  if (/\bquarterly\b|every\s+quarter|per\s+quarter|\/\s*quarter/.test(t)) return { type: 'cadence', n: 1, per: 'quarter' };
+  if (/\/\s*(yr|year)\b/.test(t)) return { type: 'cadence', n: 1, per: 'year' };
+  if (/\bdaily\b/.test(t)) return { type: 'cadence', n: 1, per: 'day' };
+  return { type: 'principle' };
+}
+function cadLabel(c){
+  if (c.type === 'deadline') return c.label;
+  if (c.type === 'principle') return 'principle';
+  var short = { day: 'day', week: 'wk', month: 'mo', quarter: 'qtr', year: 'yr' }[c.per];
+  if (c.span) return c.n + '× per ' + c.span + ' ' + (c.per === 'week' ? 'wks' : 'months');
+  return c.n + '×/' + short;
+}
+function periodIdx(c, d){
+  d = d || new Date();
+  var dayIdx = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  if (c.per === 'day') return dayIdx;
+  if (c.per === 'week') return Math.floor(Math.floor((dayIdx - 4) / 7) / (c.span || 1));
+  var mi = d.getFullYear() * 12 + d.getMonth();
+  if (c.per === 'month') return Math.floor(mi / (c.span || 1));
+  if (c.per === 'quarter') return Math.floor(mi / 3);
+  return d.getFullYear();
+}
+function idxOfDate(c, ds){ var p = ds.split('-'); return periodIdx(c, new Date(+p[0], +p[1] - 1, +p[2])); }
+function periodStats(pk, i, c){
+  var logs = cellEvents(pk, i, 'log');
+  var byIdx = {};
+  logs.forEach(function(e){
+    var ix = idxOfDate(c, e.date);
+    byIdx[ix] = byIdx[ix] || { hit: 0, miss: 0 };
+    if (e.status === 'hit') byIdx[ix].hit++;
+    if (e.status === 'miss') byIdx[ix].miss++;
+  });
+  var cur = periodIdx(c);
+  var curHits = (byIdx[cur] || {}).hit || 0;
+  function sat(ix){ return ((byIdx[ix] || {}).hit || 0) >= c.n; }
+  var streak = 0, ix = cur;
+  if (sat(ix)) { streak = 1; ix--; } else { ix--; }
+  while (sat(ix)) { streak++; ix--; }
+  return { curHits: curHits, need: c.n, satisfied: curHits >= c.n, streak: streak };
+}
+function stripDays(pk, i){
+  var logs = cellEvents(pk, i, 'log');
+  var map = {};
+  logs.forEach(function(e){
+    var cur = map[e.date];
+    if (e.status === 'hit' || (e.status === 'miss' && cur !== 'hit') || (!cur)) map[e.date] = (e.status === 'hit') ? 'hit' : (cur === 'hit' ? cur : e.status);
+  });
+  var out = [];
+  for (var d = 29; d >= 0; d--) {
+    var dt = new Date(); dt.setDate(dt.getDate() - d);
+    out.push(map[todayStr(dt)] || '');
+  }
+  return out;
+}
+function stripHtml(pk, i){
+  return '<span class="strip">' + stripDays(pk, i).map(function(s){ return '<i class="' + s + '"></i>'; }).join('') + '</span>';
+}
+function cellStatus(pk, i){ /* dot on board */
+  var text = cellText(pk, i), c = parseCadence(text);
+  if (c.type === 'deadline') {
+    var done = cellEvents(pk, i, 'log').some(function(e){ return e.status === 'hit'; });
+    return done ? 'hit' : 'open';
+  }
+  if (c.type === 'principle') {
+    var logs = cellEvents(pk, i, 'log');
+    if (!logs.length) return 'open';
+    return logs[logs.length - 1].status === 'hit' ? 'hit' : (logs[logs.length - 1].status === 'miss' ? 'miss' : 'skip');
+  }
+  var ps = periodStats(pk, i, c);
+  if (ps.satisfied) return 'hit';
+  var cur = periodIdx(c);
+  var missed = cellEvents(pk, i, 'log').some(function(e){ return e.status === 'miss' && idxOfDate(c, e.date) === cur; });
+  return missed ? 'miss' : 'open';
+}
+
+/* ---------- mutations ---------- */
+function logStatus(pk, i, status, note, via){
+  state.events.push({ id: uid(), ts: Date.now(), date: todayStr(), boardId: activeBoardId,
+    pk: pk, i: i, type: 'log', status: status, note: note || undefined, via: via || undefined });
+  persist();
+}
+function editCell(pk, i, oldT, newT){
+  state.events.push({ id: uid(), ts: Date.now(), date: todayStr(), boardId: activeBoardId,
+    pk: pk, i: i, type: 'edit', oldText: oldT, newText: newT });
+  persist();
+}
+function toggleDown(pk, i){
+  state.events.push({ id: uid(), ts: Date.now(), date: todayStr(), boardId: activeBoardId,
+    pk: pk, i: i, type: isDown(pk, i) ? 'restore' : 'downgrade' });
+  persist();
+}
+
+/* ---------- rendering ---------- */
+var root = document.getElementById('root');
+var view = { name: 'home' };
+var sheet = null; /* {pk,i,edit:bool,hist:bool} or {center:1} or {import:1} */
+var review = null; /* {queue:[{pk,i}], idx, tally:{hit,miss,skip}, note} */
+
+function layoutKeys(){
+  var ks = activeBoard().board.pillars.map(function(p){ return p.key; });
+  return [[ks[0], ks[1], ks[2]], [ks[3], null, ks[4]], [ks[5], ks[6], ks[7]]];
+}
+var CELLPOS = [0, 1, 2, 3, -1, 4, 5, 6, 7];
+
+function pillar(pk){ return activeBoard().board.pillars.filter(function(p){ return p.key === pk; })[0]; }
+
+var SYNC_LBL = { setup: 'not connected', syncing: 'syncing…', synced: 'synced', offline: 'offline — will retry', badtoken: 'token rejected', notfound: 'state.json missing' };
+function statusHtml(){
+  var cls = syncStatus === 'synced' ? 'ok' : (syncStatus === 'syncing' ? 'saving' : '');
+  return '<button class="savedot ' + cls + '" id="savedot" data-setup="1" title="Sync settings"><i></i>' + SYNC_LBL[syncStatus] + '</button>';
+}
+function renderStatus(){
+  var el = document.getElementById('savedot');
+  if (el) el.outerHTML = statusHtml();
+}
+
+function boardBlock(pk){
+  var p = pillar(pk);
+  var html = '<div class="block">';
+  CELLPOS.forEach(function(ci){
+    if (ci === -1) {
+      html += '<button class="cell pname ' + p.half + '" data-goto="' + pk + '">' + esc(p.name) + '</button>';
+    } else {
+      var st = cellStatus(pk, ci);
+      html += '<button class="cell ' + p.half + (isDown(pk, ci) ? ' down' : '') + '" data-cell="' + pk + ':' + ci + '">' +
+        '<i class="dot ' + st + '"></i><span>' + esc(cellText(pk, ci)) + '</span></button>';
+    }
+  });
+  return html + '</div>';
+}
+function centerBlock(){
+  var names = layoutKeys();
+  var html = '<div class="block">';
+  names.forEach(function(row){
+    row.forEach(function(pk){
+      if (!pk) {
+        html += '<button class="cell core" data-center="1"><span>' + esc(activeBoard().board.center.text.split('—')[0]) + '</span></button>';
+      } else {
+        var p = pillar(pk);
+        html += '<button class="cell pname ' + p.half + '" data-goto="' + pk + '">' + esc(p.name) + '</button>';
+      }
+    });
+  });
+  return html + '</div>';
+}
+
+function renderHome(){
+  var b = activeBoard();
+  var seg = state.boards.map(function(bd){
+    return '<button data-board="' + bd.id + '" class="' + (bd.id === activeBoardId ? 'on' : '') + '">' + esc(bd.name) + '</button>';
+  }).join('') + (state.boards.length < 2 ? '<button class="add" data-import="1">+ Import board</button>' : '');
+  var boardHtml = '<div class="board">';
+  layoutKeys().forEach(function(row){
+    row.forEach(function(pk){ boardHtml += pk ? boardBlock(pk) : centerBlock(); });
+  });
+  boardHtml += '</div>';
+  var revs = state.events.filter(function(e){ return e.type === 'review' && e.boardId === activeBoardId; });
+  var lastRev = revs.length ? revs[revs.length - 1] : null;
+  root.innerHTML = '<div class="wrap">' +
+    '<div class="top"><h1>Mandala 2027</h1>' + statusHtml() + '</div>' +
+    '<div class="seg">' + seg + '</div>' +
+    '<div class="center-card" data-center="1" role="button" tabindex="0">' +
+      '<div class="eyebrow">Center · ' + esc(b.name) + '</div>' +
+      '<p>' + esc(b.board.center.text) + '</p>' +
+      centerMeta(b.board.center) +
+    '</div>' +
+    '<div class="board-scroll">' + boardHtml + '</div>' +
+    '<p class="hintline">Tap a cell to log it · tap a pillar name to zoom.</p>' +
+    '<div class="review-cta"><button class="primary" data-review="1">Monthly review</button>' +
+    '<p class="lastrev">' + (lastRev ? 'Last review — ' + esc(lastRev.summary) : 'Runs once a month — pair it with the finance-overview evening.') + '</p></div>' +
+  '</div>';
+}
+function fmtUsd(n){ return '$' + (n / 1000000).toFixed(1) + 'M'; }
+function centerMeta(c){
+  var parts = [];
+  if (c.base && c.target) parts.push(fmtUsd(c.base) + ' → ' + fmtUsd(c.target));
+  if (c.deadline) parts.push('deadline ' + esc(c.deadline));
+  return parts.length ? '<div class="meta mono">' + parts.join(' · ') + '</div>' : '';
+}
+
+function renderPillar(pk){
+  var p = pillar(pk);
+  var rows = p.cells.map(function(_, i){
+    var text = cellText(pk, i), c = parseCadence(text), down = isDown(pk, i);
+    var sub = '<span class="chip ' + (c.type === 'deadline' ? 'dl' : (c.type === 'principle' ? '' : 'cad')) + '">' + esc(cadLabel(c)) + '</span>';
+    if (down) sub += '<span class="chip">downgraded</span>';
+    if (c.type === 'cadence') {
+      var ps = periodStats(pk, i, c);
+      sub += '<span class="streak">this period <b class="mono">' + ps.curHits + '/' + ps.need + '</b></span>' +
+             '<span class="streak">streak <b class="mono">' + ps.streak + '</b></span>';
+    }
+    sub += stripHtml(pk, i);
+    return '<button class="crow' + (down ? ' down' : '') + '" data-cell="' + pk + ':' + i + '">' +
+      '<div class="t">' + esc(text) + '</div><div class="sub">' + sub + '</div></button>';
+  }).join('');
+  root.innerHTML = '<div class="wrap' + (p.half === 'life' ? ' life-p' : '') + '">' +
+    '<div class="backrow"><button data-home="1">← Board</button>' + statusHtml() + '</div>' +
+    '<div class="ptitle"><h2>' + esc(p.name) + '</h2><span class="half-tag ' + p.half + '">' + p.half + '</span></div>' +
+    rows + '</div>';
+}
+
+function renderSheet(){
+  var old = document.getElementById('sheetwrap');
+  if (old) old.remove();
+  if (!sheet) return;
+  var el = document.createElement('div');
+  el.id = 'sheetwrap';
+  var inner;
+  if (sheet.center) {
+    var bd = activeBoard();
+    var c = bd.board.center;
+    inner = '<div class="celltext">' + esc(c.text) + '</div>' +
+      (centerMeta(c) ? '<div class="row">' + centerMeta(c) + '</div>' : '');
+    if (c.metric === 'programs_paid_usd') {
+      inner += '<p style="font-size:13px;color:var(--ink2)">The center is measured in programs paid — money in, never tools shipped. Track it in the monthly finance overview; the cells feed it.</p>';
+    }
+    if (bd.board.glossary) {
+      inner += '<div class="minilog"><h4>Glossary</h4>' + Object.keys(bd.board.glossary).map(function(k){
+        return '<div class="le"><b>' + esc(k) + '</b><span>' + esc(bd.board.glossary[k]) + '</span></div>';
+      }).join('') + '</div>';
+    }
+    if (bd.board.source) inner += '<p style="font-size:11px;color:var(--ink2);margin-top:10px">' + esc(bd.board.source) + '</p>';
+  } else if (sheet.importBoard) {
+    inner = '<div class="modal-title">Import a board</div>' +
+      '<p style="font-size:13px;color:var(--ink2)">Paste a board JSON with the same schema (center + 8 pillars × 8 cells). No merging — it becomes a second, switchable board.</p>' +
+      '<div class="fieldlb">Owner name</div><input id="imp-name" value="Nicha">' +
+      '<div class="fieldlb">Board JSON</div><textarea id="imp-json" class="import" placeholder="{ &quot;center&quot;: … }"></textarea>' +
+      '<div class="err" id="imp-err"></div>' +
+      '<div class="bigbtns" style="grid-template-columns:1fr 1fr">' +
+      '<button class="b-hit" data-doimport="1">Import</button>' +
+      '<button class="b-skip" data-close="1">Cancel</button></div>';
+  } else {
+    var pk = sheet.pk, i = sheet.i;
+    var text = cellText(pk, i), cad = parseCadence(text), down = isDown(pk, i);
+    var isPr = cad.type === 'principle';
+    var chips = '<span class="chip ' + (cad.type === 'deadline' ? 'dl' : (isPr ? '' : 'cad')) + '">' + esc(cadLabel(cad)) + '</span>';
+    if (down) chips += '<span class="chip">downgraded</span>';
+    if (cad.type === 'cadence') {
+      var ps = periodStats(pk, i, cad);
+      chips += '<span class="streak">this period <b class="mono">' + ps.curHits + '/' + ps.need + '</b></span>' +
+        '<span class="streak">streak <b class="mono">' + ps.streak + '</b></span>';
+    }
+    var labels = isPr ? ['Keep', 'Review', 'Skip'] : (cad.type === 'deadline' ? ['Done', 'Not yet', 'Skip'] : ['Hit', 'Miss', 'Skip']);
+    var logs = cellEvents(pk, i, 'log').slice(-5).reverse();
+    var logHtml = logs.length ? logs.map(function(e){
+      return '<div class="le"><b class="mono">' + e.date + '</b><span class="st-' + e.status + '">' + e.status + '</span>' +
+        (e.note ? '<span>' + esc(e.note) + '</span>' : '') + '</div>';
+    }).join('') : '<div class="le">No entries yet.</div>';
+    var edits = cellEvents(pk, i, 'edit');
+    var histHtml = '';
+    if (sheet.hist && edits.length) {
+      histHtml = '<div class="hist">' + edits.slice().reverse().map(function(e){
+        return '<div class="he"><span class="mono">' + e.date + '</span> — was: “' + esc(e.oldText) + '”</div>';
+      }).join('') + '</div>';
+    }
+    if (sheet.edit) {
+      inner = '<div class="modal-title">Edit cell</div>' +
+        '<textarea id="edit-text" class="import" style="min-height:80px;font-family:inherit;font-size:14px">' + esc(text) + '</textarea>' +
+        '<p style="font-size:12px;color:var(--ink2);margin-top:6px">The old wording is kept in history. To lower the bar honestly, edit the text or mark the cell downgraded — never delete.</p>' +
+        '<div class="bigbtns" style="grid-template-columns:1fr 1fr">' +
+        '<button class="b-hit" data-saveedit="1">Save</button>' +
+        '<button class="b-skip" data-canceledit="1">Cancel</button></div>';
+    } else {
+      inner = '<div class="celltext">' + esc(text) + '</div>' +
+        '<div class="row">' + chips + '</div>' +
+        '<div class="row">' + stripHtml(pk, i) + '<span class="streak">last 30 days</span></div>' +
+        '<div class="notein"><input id="log-note" placeholder="Note (optional)"></div>' +
+        '<div class="bigbtns">' +
+          '<button class="b-hit" data-log="hit">' + labels[0] + '</button>' +
+          '<button class="b-miss" data-log="miss">' + labels[1] + '</button>' +
+          '<button class="b-skip" data-log="skip">' + labels[2] + '</button></div>' +
+        '<div class="minilog"><h4>Recent</h4>' + logHtml + '</div>' +
+        '<div class="linkrow">' +
+          '<button data-editcell="1">Edit text</button>' +
+          '<button data-down="1">' + (down ? 'Restore' : 'Mark downgraded') + '</button>' +
+          (edits.length ? '<button data-hist="1">' + (sheet.hist ? 'Hide history' : 'History (' + edits.length + ')') + '</button>' : '') +
+        '</div>' + histHtml;
+    }
+  }
+  el.innerHTML = '<div class="overlay" data-close="1"></div><div class="sheet" role="dialog"><div class="grab"></div>' + inner + '</div>';
+  document.body.appendChild(el);
+}
+
+/* ---------- review mode ---------- */
+function startReview(){
+  var queue = [];
+  activeBoard().board.pillars.forEach(function(p){
+    p.cells.forEach(function(_, i){
+      if (isDown(p.key, i)) return;
+      var c = parseCadence(cellText(p.key, i));
+      queue.push({ pk: p.key, i: i, pr: c.type === 'principle' ? 1 : 0 });
+    });
+  });
+  queue.sort(function(a, b){ return a.pr - b.pr; });
+  review = { queue: queue, idx: 0, tally: { hit: 0, miss: 0, skip: 0 } };
+  render();
+}
+function renderReview(){
+  var el = document.getElementById('reviewwrap');
+  if (el) el.remove();
+  if (!review) return;
+  el = document.createElement('div');
+  el.id = 'reviewwrap';
+  var inner;
+  if (review.idx >= review.queue.length) {
+    var t = review.tally;
+    var month = todayStr().slice(0, 7);
+    inner = '<div class="rev-done"><h2>Review done</h2>' +
+      '<div class="tally">' +
+      '<div><div class="num" style="color:var(--hit)">' + t.hit + '</div><div class="lb">hit / keep</div></div>' +
+      '<div><div class="num" style="color:var(--miss)">' + t.miss + '</div><div class="lb">miss / review</div></div>' +
+      '<div><div class="num" style="color:var(--skip)">' + t.skip + '</div><div class="lb">skipped</div></div></div>' +
+      '<div class="fieldlb">One-line summary note (optional)</div><input id="rev-note">' +
+      '<div style="margin-top:14px"><button class="primary" data-finishrev="1">Write to log & close</button>' +
+      '<button class="ghost" data-cancelrev="1">Discard</button></div></div>';
+  } else {
+    var q = review.queue[review.idx];
+    var p = pillar(q.pk);
+    var text = cellText(q.pk, q.i), cad = parseCadence(text);
+    var isPr = cad.type === 'principle';
+    var labels = isPr ? ['Keep', 'Review', 'Skip'] : (cad.type === 'deadline' ? ['Done', 'Not yet', 'Skip'] : ['Hit', 'Miss', 'Skip']);
+    var note = '';
+    if (cad.type === 'cadence') {
+      var ps = periodStats(q.pk, q.i, cad);
+      note = ps.satisfied ? '✓ already on track this period' : 'this period so far: ' + ps.curHits + '/' + ps.need;
+    }
+    inner = '<div class="rev-top"><button data-cancelrev="1" style="color:var(--ink2)">✕ Exit</button>' +
+      '<span class="prog mono">' + (review.idx + 1) + ' / ' + review.queue.length + '</span></div>' +
+      '<div class="rev-bar"><i style="width:' + Math.round(review.idx / review.queue.length * 100) + '%"></i></div>' +
+      '<div class="rev-card"><div class="pl ' + p.half + '">' + esc(p.name) + '</div>' +
+      '<div class="ct">' + esc(text) + '</div>' +
+      '<div class="row"><span class="chip ' + (cad.type === 'deadline' ? 'dl' : (isPr ? '' : 'cad')) + '">' + esc(cadLabel(cad)) + '</span></div>' +
+      '<div class="bigbtns">' +
+        '<button class="b-hit" data-revlog="hit">' + labels[0] + '</button>' +
+        '<button class="b-miss" data-revlog="miss">' + labels[1] + '</button>' +
+        '<button class="b-skip" data-revlog="skip">' + labels[2] + '</button></div>' +
+      (note ? '<div class="rev-note">' + note + '</div>' : '') + '</div>';
+  }
+  el.innerHTML = '<div class="review"><div class="inner">' + inner + '</div></div>';
+  document.body.appendChild(el);
+}
+function finishReview(){
+  var t = review.tally;
+  var month = todayStr().slice(0, 7);
+  var noteEl = document.getElementById('rev-note');
+  var summary = month + ': ' + t.hit + ' hit · ' + t.miss + ' miss · ' + t.skip + ' skip of ' + review.queue.length + ' cells' +
+    (noteEl && noteEl.value.trim() ? ' — ' + noteEl.value.trim() : '');
+  state.events.push({ id: uid(), ts: Date.now(), date: todayStr(), boardId: activeBoardId,
+    type: 'review', month: month, summary: summary });
+  persist();
+  review = null;
+  render();
+}
+
+/* ---------- import ---------- */
+function doImport(){
+  var name = (document.getElementById('imp-name').value || '').trim() || 'Nicha';
+  var errEl = document.getElementById('imp-err');
+  var raw = document.getElementById('imp-json').value;
+  var b;
+  try { b = JSON.parse(raw); } catch (e) { errEl.textContent = 'Not valid JSON.'; return; }
+  if (!b || !b.center || !b.center.text || !Array.isArray(b.pillars) || b.pillars.length !== 8 ||
+      b.pillars.some(function(p){ return !p.key || !p.name || !Array.isArray(p.cells) || p.cells.length !== 8; })) {
+    errEl.textContent = 'Schema check failed: needs a center with text and exactly 8 pillars × 8 cells (each pillar: key, name, half, cells).';
+    return;
+  }
+  var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'board2';
+  if (state.boards.some(function(x){ return x.id === id; })) id += '-2';
+  state.boards.push({ id: id, name: name, board: b });
+  persist();
+  activeBoardId = id;
+  try { localStorage.setItem('mandala-active-board', id); } catch (e) {}
+  sheet = null;
+  render();
+}
+
+/* ---------- events ---------- */
+function renderSetup(){
+  var c = cfg || {};
+  root.innerHTML = '<div class="wrap">' +
+    '<div class="top"><h1>Mandala 2027</h1></div>' +
+    '<div class="center-card" style="cursor:default"><div class="eyebrow">Connect</div>' +
+    '<p>The shared memory lives in a private GitHub repo. Paste the access token — once per device.</p>' +
+    '<div class="meta">Fine-grained token, scoped to the data repo only, Contents read &amp; write.</div></div>' +
+    '<div class="fieldlb">Access token</div><input id="cfg-token" type="password" autocomplete="off" value="' + esc(c.token || '') + '">' +
+    '<div class="fieldlb">Data repo</div><input id="cfg-repo" value="' + esc(c.repo || 'Talos91/mandala-data') + '">' +
+    '<div class="err" id="cfg-err">' + (syncStatus === 'badtoken' ? 'The saved token was rejected — paste a fresh one.' : '') + '</div>' +
+    '<div style="margin-top:14px"><button class="primary" data-connect="1">Connect</button>' +
+    (cfg && state ? '<button class="ghost" data-cancelsetup="1">Back</button>' : '') +
+    '</div></div>';
+}
+function renderLoading(){
+  root.innerHTML = '<div class="wrap">' +
+    '<div class="top"><h1>Mandala 2027</h1>' + statusHtml() + '</div>' +
+    '<div class="center-card" style="cursor:default"><div class="eyebrow">Loading</div>' +
+    '<p>Fetching the boards from the data repo…</p></div>' +
+    '<button class="ghost" data-refresh="1">Retry</button></div>';
+}
+function render(){
+  if (!cfg || view.name === 'setup') { renderSetup(); return; }
+  if (!state) { renderLoading(); return; }
+  if (view.name === 'pillar') renderPillar(view.pk); else renderHome();
+  renderSheet();
+  renderReview();
+}
+document.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-cell],[data-goto],[data-home],[data-board],[data-center],[data-close],[data-log],[data-editcell],[data-saveedit],[data-canceledit],[data-down],[data-hist],[data-review],[data-revlog],[data-finishrev],[data-cancelrev],[data-import],[data-doimport],[data-setup],[data-connect],[data-cancelsetup],[data-refresh]');
+  if (!el) return;
+  var d = el.dataset;
+  if (d.connect) {
+    var tk = document.getElementById('cfg-token').value.trim();
+    var rp = document.getElementById('cfg-repo').value.trim();
+    if (!tk || rp.indexOf('/') < 1) {
+      document.getElementById('cfg-err').textContent = 'Need a token and a repo like owner/name.';
+      return;
+    }
+    cfg = { token: tk, repo: rp, path: 'state.json' };
+    try { localStorage.setItem(CFGKEY, JSON.stringify(cfg)); } catch (e) {}
+    view = { name: 'home' };
+    render();
+    pull();
+    return;
+  }
+  if (d.cancelsetup) { view = { name: 'home' }; render(); return; }
+  if (d.setup) { view = { name: 'setup' }; render(); return; }
+  if (d.refresh) { pull(); return; }
+  if (d.board) {
+    activeBoardId = d.board;
+    try { localStorage.setItem('mandala-active-board', d.board); } catch (e) {}
+    view = { name: 'home' }; render(); return;
+  }
+  if (d.goto) { view = { name: 'pillar', pk: d.goto }; render(); return; }
+  if (d.home) { view = { name: 'home' }; render(); return; }
+  if (d.cell) { var p = d.cell.split(':'); sheet = { pk: p[0], i: +p[1] }; renderSheet(); return; }
+  if (d.center) { sheet = { center: 1 }; renderSheet(); return; }
+  if (d.import) { sheet = { importBoard: 1 }; renderSheet(); return; }
+  if (d.doimport) { doImport(); return; }
+  if (d.close) { sheet = null; renderSheet(); return; }
+  if (d.log) {
+    var noteEl = document.getElementById('log-note');
+    logStatus(sheet.pk, sheet.i, d.log, noteEl ? noteEl.value.trim() : '');
+    sheet = null; render(); return;
+  }
+  if (d.editcell) { sheet.edit = 1; renderSheet(); return; }
+  if (d.canceledit) { sheet.edit = 0; renderSheet(); return; }
+  if (d.saveedit) {
+    var ta = document.getElementById('edit-text');
+    var nt = ta.value.trim();
+    var ot = cellText(sheet.pk, sheet.i);
+    if (nt && nt !== ot) editCell(sheet.pk, sheet.i, ot, nt);
+    sheet.edit = 0; render(); return;
+  }
+  if (d.down) { toggleDown(sheet.pk, sheet.i); render(); return; }
+  if (d.hist) { sheet.hist = !sheet.hist; renderSheet(); return; }
+  if (d.review) { startReview(); return; }
+  if (d.revlog) {
+    var q = review.queue[review.idx];
+    if (d.revlog !== 'skip') logStatus(q.pk, q.i, d.revlog, '', 'review');
+    review.tally[d.revlog]++;
+    review.idx++;
+    renderReview(); return;
+  }
+  if (d.finishrev) { finishReview(); return; }
+  if (d.cancelrev) { review = null; render(); return; }
+});
+document.addEventListener('keydown', function(ev){
+  if (ev.key === 'Escape') { if (sheet) { sheet = null; renderSheet(); } }
+  if (ev.key === 'Enter' && ev.target.classList && ev.target.classList.contains('center-card')) {
+    sheet = { center: 1 }; renderSheet();
+  }
+});
+render();
+pull();
+</script>
+
+</body></html>
