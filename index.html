@@ -291,6 +291,26 @@ if (LOCK) activeBoardId = LOCK;
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   try { navigator.serviceWorker.register('./sw.js'); } catch (e) {}
 }
+var installEvt = null, isInstalled = false;
+try { isInstalled = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  installEvt = e;
+  var slot = document.getElementById('installslot');
+  if (slot) slot.outerHTML = installHtml();
+});
+window.addEventListener('appinstalled', function(){
+  installEvt = null; isInstalled = true;
+  var slot = document.getElementById('installslot');
+  if (slot) slot.outerHTML = installHtml();
+});
+function installHtml(){
+  if (isInstalled) return '<span id="installslot"></span>';
+  if (installEvt) return '<button id="installslot" class="ghost" data-install="1">Save as app on this phone</button>';
+  var ua = navigator.userAgent || '';
+  if (/iPhone|iPad/.test(ua)) return '<p id="installslot" class="lastrev">To install: Safari → Share → Add to Home Screen</p>';
+  return '<span id="installslot"></span>';
+}
 
 function activeBoard(){
   if (!state.boards.some(function(b){ return b.id === activeBoardId; })) activeBoardId = state.boards[0].id;
@@ -562,7 +582,8 @@ function renderHome(){
     '<p class="hintline">Tap a cell to log it · tap a pillar name to zoom.</p>' +
     '<div class="review-cta"><button class="primary" data-review="1">Monthly review</button>' +
     '<p class="lastrev">' + (lastRev ? 'Last review — ' + esc(lastRev.summary) : 'Runs once a month — pair it with the finance-overview evening.') + '</p>' +
-    '<a class="callink" href="' + calUrl() + '" target="_blank" rel="noopener">＋ Add monthly review to Google Calendar</a></div>' +
+    '<a class="callink" href="' + calUrl() + '" target="_blank" rel="noopener">＋ Add monthly review to Google Calendar</a>' +
+    installHtml() + '</div>' +
   '</div>';
 }
 function fmtUsd(n){ return '$' + (n / 1000000).toFixed(1) + 'M'; }
@@ -799,7 +820,7 @@ function render(){
   renderReview();
 }
 document.addEventListener('click', function(ev){
-  var el = ev.target.closest('[data-cell],[data-goto],[data-home],[data-board],[data-center],[data-close],[data-log],[data-editcell],[data-saveedit],[data-canceledit],[data-down],[data-hist],[data-review],[data-revlog],[data-finishrev],[data-cancelrev],[data-import],[data-doimport],[data-setup],[data-connect],[data-cancelsetup],[data-refresh]');
+  var el = ev.target.closest('[data-cell],[data-goto],[data-home],[data-board],[data-center],[data-close],[data-log],[data-editcell],[data-saveedit],[data-canceledit],[data-down],[data-hist],[data-review],[data-revlog],[data-finishrev],[data-cancelrev],[data-import],[data-doimport],[data-setup],[data-connect],[data-cancelsetup],[data-refresh],[data-install]');
   if (!el) return;
   var d = el.dataset;
   if (d.connect) {
@@ -820,6 +841,7 @@ document.addEventListener('click', function(ev){
   if (d.setup) { view = { name: 'setup' }; render(); return; }
   if (d.refresh) { pull(); return; }
   if (d.dueall !== undefined) { view.dueAll = d.dueall === '1'; render(); return; }
+  if (d.install) { if (installEvt) installEvt.prompt(); return; }
   if (d.board) {
     activeBoardId = d.board;
     try { localStorage.setItem('mandala-active-board', d.board); } catch (e) {}
