@@ -264,8 +264,11 @@ document.addEventListener('visibilitychange', function(){ if (!document.hidden &
 setInterval(function(){ if (!document.hidden && cfg) pull(); }, 90000);
 
 /* ---------- derived data ---------- */
+var LOCK = null;
+try { LOCK = new URLSearchParams(location.search).get('board'); } catch (e) {}
 var activeBoardId = null;
 try { activeBoardId = localStorage.getItem('mandala-active-board'); } catch (e) {}
+if (LOCK) activeBoardId = LOCK;
 
 function activeBoard(){
   if (!state.boards.some(function(b){ return b.id === activeBoardId; })) activeBoardId = state.boards[0].id;
@@ -455,9 +458,9 @@ function centerBlock(){
 
 function renderHome(){
   var b = activeBoard();
-  var seg = state.boards.map(function(bd){
+  var seg = LOCK ? '' : '<div class="seg">' + state.boards.map(function(bd){
     return '<button data-board="' + bd.id + '" class="' + (bd.id === activeBoardId ? 'on' : '') + '">' + esc(bd.name) + '</button>';
-  }).join('') + (state.boards.length < 2 ? '<button class="add" data-import="1">+ Import board</button>' : '');
+  }).join('') + (state.boards.length < 2 ? '<button class="add" data-import="1">+ Import board</button>' : '') + '</div>';
   var boardHtml = '<div class="board">';
   layoutKeys().forEach(function(row){
     row.forEach(function(pk){ boardHtml += pk ? boardBlock(pk) : centerBlock(); });
@@ -467,7 +470,7 @@ function renderHome(){
   var lastRev = revs.length ? revs[revs.length - 1] : null;
   root.innerHTML = '<div class="wrap">' +
     '<div class="top"><h1>Mandala 2027</h1>' + statusHtml() + '</div>' +
-    '<div class="seg">' + seg + '</div>' +
+    seg +
     '<div class="center-card" data-center="1" role="button" tabindex="0">' +
       '<div class="eyebrow">Center · ' + esc(b.name) + '</div>' +
       '<p>' + esc(b.board.center.text) + '</p>' +
